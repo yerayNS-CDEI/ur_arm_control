@@ -7,7 +7,6 @@ from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 from scipy.spatial.transform import Rotation as R
-
 from robotic_arm_planner.planner_lib.closed_form_algorithm import closed_form_algorithm
 
 class SensorsOrientation(Node):
@@ -32,7 +31,6 @@ class SensorsOrientation(Node):
         self.pC= np.array([xC, yC, 0.0])
 
         self.publisher_ = self.create_publisher(String, 'topic', 10)
-        # self.publisher_goal_pose = self.create_publisher(Pose, '/goal_pose', 10)
         self.trajectory_pub = self.create_publisher(JointTrajectory, '/planned_trajectory', 10)
 
         self.subscriptor_ = self.create_subscription(Pose, '/end_effector_pose', self.end_effector_pose_callback, 10)
@@ -87,28 +85,52 @@ class SensorsOrientation(Node):
         pitch = np.arctan2(nw[1],nw[2])
         yaw_deg = np.rad2deg(yaw)
         pitch_deg = np.rad2deg(pitch)
-
         self.get_logger().info(f"Pitch: {pitch_deg:.2f} degrees")
         self.get_logger().info(f"Yaw: {yaw_deg:.2f} degrees")
-
+        
+        # Current rotation of the EE w.r.t. base frame
         rot = self.end_effector_pose.orientation
-        euler = R.from_quat([rot.x, rot.y, rot.z, rot.w]).as_euler('xyz')
-        self.get_logger().info(f"Current Orientation (rpy): roll={euler[0]:.2f}, pitch={euler[1]:.2f}, yaw={euler[2]:.2f}")
-        goal_orn = [euler[0], euler[1] + pitch, euler[2] + yaw]
-        self.get_logger().info(f"Demanded Orientation (rpy): roll={goal_orn[0]:.2f}, pitch={goal_orn[1]:.2f}, yaw={goal_orn[2]:.2f}")
-        goal_orn = R.from_euler('xyz', goal_orn, degrees=False)
-        q = goal_orn.as_quat()
+        curr_orn_rot = R.from_quat([rot.x, rot.y, rot.z, rot.w])
+        curr_orn = R.from_quat([rot.x, rot.y, rot.z, rot.w]).as_euler('ZYX', degrees=True)
+        self.get_logger().info(f"Current Orientation (rpy w.r.t. base frame): Roll={curr_orn[0]:.2f}, Pitch={curr_orn[1]:.2f}, Yaw={curr_orn[2]:.2f}")
 
-        # Convert orientation quaternion to rotation matrix
-        rot = self.end_effector_pose.orientation
-        r = R.from_quat([rot.x, rot.y, rot.z, rot.w])
-        nw_global = r.apply(nw)
+        # Incremental rotation in EE frame Rotación (order ZYX = Intrinsic roll-pitch-yaw)
+        increment_rot_ee = R.from_euler('ZYX', [0, pitch, yaw], degrees=False)
+
+        # Rotation Composition: R_goal = R_base * R_increment(EE_frame)
+        goal_rot = curr_orn_rot * increment_rot_ee
+        # goal_rot_euler = goal_rot.as_euler('ZYX', degrees=True)
+        # self.get_logger().info(f"Demanded Orientation (rpy w.r.t. base frame): Roll={goal_rot_euler[0]:.2f}, Pitch={goal_rot_euler[1]:.2f}, Yaw={goal_rot_euler[2]:.2f}")
+
+        # Roll Compensation 
+        z_ee = goal_rot.apply([0, 0, 1])    # obtaining Z_EE in base frame
+        y_desired = np.array([0.0, 0.0, 1.0])  # obtaining ideal Y axis (-Z on base frame) - vertical vector in the sensors setup
+        y_proj = y_desired - np.dot(y_desired, z_ee) * z_ee     # project y_desired on the sensors plane
+        norm = np.linalg.norm(y_proj)
+        if norm < 1e-6:
+            self.get_logger().warn("y_proj is nearly zero: y_desired is aligned with Z_EE.")
+        else:
+            y_proj /= norm
+            y_proj /= np.linalg.norm(y_proj)
+            # Reconstruct ortonormal base (X = Y × Z)
+            x_ee = np.cross(y_proj, z_ee)
+            x_ee /= np.linalg.norm(x_ee)
+            y_ee = np.cross(z_ee, x_ee)
+            # New rotation with fixed Z_EE and corrected Y_EE
+            R_corrected = np.column_stack((x_ee, y_ee, z_ee))
+            goal_rot = R.from_matrix(R_corrected)
+
+        # Final quaternion
+        q = goal_rot.as_quat()
+        final_euler = goal_rot.as_euler('ZYX', degrees=True)
+        self.get_logger().info(f"Final Corrected Orientation (rpy w.r.t. base frame): Roll={final_euler[0]:.2f}, Pitch={final_euler[1]:.2f}, Yaw={final_euler[2]:.2f}")
 
         # Current end effector position
         pos = self.end_effector_pose.position
         p_current = np.array([pos.x, pos.y, pos.z])
 
         # Compute corrected position
+        nw_global = curr_orn_rot.apply(nw)
         self.get_logger().warn(f"Toggle Value: {self.toggle}")
         p_new = p_current - (self.toggle)*abs(distance - self.ideal_distance) * nw_global / 100
         self.toggle *= -1
@@ -123,6 +145,17 @@ class SensorsOrientation(Node):
         if np.any(np.isnan(joint_values)):
             self.get_logger().error("IK solution contains NaN. Aborting.")
             return
+        # if {
+            #     (joint_values[0] < -1.57 or joint_values[0] > 1.57) or 
+            #     (joint_values[1] < -1.57 or joint_values[1] > 1.57) or 
+            #     (joint_values[2] < -1.57 or joint_values[2] > 1.57) or 
+            #     (joint_values[3] < -1.57 or joint_values[3] > 1.57) or 
+            #     (joint_values[4] < -1.57 or joint_values[4] > 1.57) or 
+            #     (joint_values[5] < -1.57 or joint_values[5] > 1.57)
+            #     }:
+            #     self.get_logger().error("Selected solution with possible collision. Joint values outside of safety margins. Aborting.")
+            #     return
+            # joint_values[5] = 0.0   # NEEDS TO BE MODIFIED IN CASE ANOTHER INITIAL SENSORS POSITION IS USED!!!
 
         # Publish GoalPose
         traj_msg = JointTrajectory()
@@ -142,29 +175,13 @@ class SensorsOrientation(Node):
         traj_msg.points.append(goal_pose)
         self.trajectory_pub.publish(traj_msg)
 
-        # goal_pose = Pose()
-        # goal_pose.position.x = p_new[0]
-        # goal_pose.position.y = p_new[1]
-        # goal_pose.position.z = p_new[2]
-        # goal_pose.orientation.x = q[0]
-        # goal_pose.orientation.y = q[1]
-        # goal_pose.orientation.z = q[2]
-        # goal_pose.orientation.w = q[3]
-        # self.publisher_goal_pose.publish(goal_pose)
-
 def main(args=None):
     rclpy.init(args=args)
-
     sensors_orientation = SensorsOrientation()
-
     rclpy.spin(sensors_orientation)
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    sensors_orientation.destroy_node()
+    sensors_orientation.destroy_node()      # destroy the node 
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
+    

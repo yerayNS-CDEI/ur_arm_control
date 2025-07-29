@@ -23,8 +23,8 @@ class UR10eTrajectoryClient(Node):
         ]
 
         point = JointTrajectoryPoint()
-        point.positions = [0.0, -1.57, 1.57, -1.57, -1.57, 0.0]  # ejemplo de posición segura
-        point.time_from_start.sec = 3  # 3 segundos para llegar
+        point.positions = [0.0, -1.57, 1.57, -1.57, -1.57, 0.0]  # safe pose
+        point.time_from_start.sec = 3
 
         goal_msg.trajectory.points = [point]
 
@@ -35,7 +35,7 @@ class UR10eTrajectoryClient(Node):
 
         self.future_goal.add_done_callback(self.goal_response_callback)
 
-        # Escuchar tecla para cancelar
+        # Thread to listening keyboard for cancelling
         cancel_thread = threading.Thread(target=self.listen_for_cancel)
         cancel_thread.daemon = True
         cancel_thread.start()
@@ -65,10 +65,10 @@ class UR10eTrajectoryClient(Node):
         rclpy.shutdown()
 
     def listen_for_cancel(self):
-        print("\n Pulsa 'c' para cancelar la trayectoria en curso.")
+        print("\n Press 'c' to cancel ongoing trajectory.")
         while True:
             if self.get_char() == 'c':
-                self.get_logger().warn('Cancelando trayectoria...')
+                self.get_logger().warn('Cancelling trajectory...')
                 self._goal_handle.cancel_goal_async()
                 return
 

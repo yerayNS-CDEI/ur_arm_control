@@ -21,7 +21,7 @@ class VL6180MultiNode(Node):
 
         self.timer = self.create_timer(0.1, self.read_serial)
 
-        self.get_logger().info("VL6180 multi-sensor node initialized.")
+        self.get_logger().info("VL6180 and HC-SR04 multi-sensor node initialized.")
 
     def create_range_msg(self, frame_id, distance_m):
         msg = Range()
@@ -71,67 +71,3 @@ def main(args=None):
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
-
-
-# #!/usr/bin/env python3
-# import rclpy
-# from rclpy.node import Node
-# from sensor_msgs.msg import Range
-# from std_msgs.msg import Header
-# import serial
-# import time
-
-# class VL6180Node(Node):
-#     def __init__(self):
-#         super().__init__('vl6180_sensor_node')
-
-#         # Ajusta este puerto si tu Arduino está en otro
-#         self.serial = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
-
-#         self.publisher_ = self.create_publisher(Range, 'vl6180/range', 10)
-
-#         # Publicar a 10 Hz
-#         self.timer = self.create_timer(0.1, self.read_serial_data)
-
-#         self.get_logger().info("VL6180 node using sensor_msgs/Range initialized.")
-
-#     def read_serial_data(self):
-#         try:
-#             # Limpiar todos los datos menos el último
-#             while self.serial.in_waiting > 0:
-#                 last_line = self.serial.readline()
-
-#             # Procesar solo la última línea leída
-#             line = last_line.decode('utf-8').strip()
-
-#             if line.isdigit():
-#                 distance_mm = int(line)
-#                 distance_m = distance_mm / 1000.0
-
-#                 msg = Range()
-#                 msg.header = Header()
-#                 msg.header.stamp = self.get_clock().now().to_msg()
-#                 msg.header.frame_id = "vl6180_sensor"
-
-#                 msg.radiation_type = Range.INFRARED
-#                 msg.field_of_view = 0.0349
-#                 msg.min_range = 0.01
-#                 msg.max_range = 0.18
-#                 msg.range = min(max(distance_m, msg.min_range), msg.max_range)
-
-#                 self.publisher_.publish(msg)
-#                 self.get_logger().info(f"Published range: {msg.range:.3f} m")
-
-#         except Exception as e:
-#             self.get_logger().warn(f"Serial read error: {e}")
-
-
-# def main(args=None):
-#     rclpy.init(args=args)
-#     node = VL6180Node()
-#     rclpy.spin(node)
-#     node.destroy_node()
-#     rclpy.shutdown()
-
-# if __name__ == '__main__':
-#     main()
