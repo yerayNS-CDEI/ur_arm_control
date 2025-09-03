@@ -35,7 +35,7 @@ setup(
             'sensors_distance = ur_arm_control.sensors_distance:main',
             'sensors_orientation = ur_arm_control.sensors_orientation:main',
             'sensors_arduino = ur_arm_control.sensors_arduino:main',
-            'sensors_orientation_sim = ur_arm_control.sensors_orientation_sim:main',
+            'sensors_distance_orientation_sim = ur_arm_control.sensors_distance_orientation_sim:main',
         ],
     },
 )

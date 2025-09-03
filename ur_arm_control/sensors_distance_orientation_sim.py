@@ -16,9 +16,10 @@ class SensorsOrientation(Node):
 
         # Node Variables
         self.end_effector_pose = None
-        self.min_distance = 19.0    # cm
-        self.max_distance = 23.0    # cm
-        self.ideal_distance = 5.0  # cm
+        self.current_joint_state = None
+        self.min_distance = 18.0    # cm
+        self.max_distance = 22.0    # cm
+        self.ideal_distance = 20.0  # cm
         self.toggle = 1
         # 3 sensors: A left, B right, C top 
         # Positions on the plate 
@@ -30,11 +31,10 @@ class SensorsOrientation(Node):
         self.pB= np.array([xB, yB, 0.0])
         self.pC= np.array([xC, yC, 0.0])
 
-        self.publisher_ = self.create_publisher(String, 'topic', 10)
-        self.trajectory_pub = self.create_publisher(JointTrajectory, '/planned_trajectory', 10)
+        self.trajectory_pub = self.create_publisher(JointTrajectory, '/arm/planned_trajectory', 10)
 
-        self.subscriptor_ = self.create_subscription(Pose, '/end_effector_pose', self.end_effector_pose_callback, 10)
-        self.create_subscription(JointState, "/joint_states", self.joint_state_callback, 10)
+        self.subscriptor_ = self.create_subscription(Pose, '/arm/end_effector_pose', self.end_effector_pose_callback, 10)
+        self.create_subscription(JointState, "/arm/joint_states", self.joint_state_callback, 10)
 
         self.timer = self.create_timer(1.0, self.timer_callback)
 
@@ -48,6 +48,14 @@ class SensorsOrientation(Node):
 
         if not self.end_effector_pose:
             self.get_logger().info("No end effector pose retrieved yet")
+            return
+        
+        if not self.current_joint_state:
+            self.get_logger().info("No joint state received yet")
+            return
+
+        if not self.current_joint_state.position or len(self.current_joint_state.position) < 6:
+            self.get_logger().warn("JointState has no positions or fewer than 6 joints")
             return
 
         # Distance readings from sensors
