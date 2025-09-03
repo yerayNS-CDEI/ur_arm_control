@@ -46,12 +46,12 @@ class PublisherJointTrajectoryActionClient(Node):
                 if len(self.starting_point[name]) != 2:
                     raise Exception('"starting_point" parameter is not set correctly!')
                 
-        self.joint_state_sub = self.create_subscription(JointState, "/joint_states", self.joint_state_callback, 10)
-        self.trajectory_sub = self.create_subscription(JointTrajectory, "/planned_trajectory", self.trajectory_callback, 10)
-        self.status_pub = self.create_publisher(Bool, "/execution_status", 10)
-        self.emergency_sub = self.create_subscription(Bool, "/emergency_stop", self.emergency_callback, 10)
+        self.joint_state_sub = self.create_subscription(JointState, "joint_states", self.joint_state_callback, 10)
+        self.trajectory_sub = self.create_subscription(JointTrajectory, "planned_trajectory", self.trajectory_callback, 10)
+        self.status_pub = self.create_publisher(Bool, "execution_status", 10)
+        self.emergency_sub = self.create_subscription(Bool, "emergency_stop", self.emergency_callback, 10)
 
-        self.emergency_srv = self.create_service(Trigger, "/emergency_stop", self.handle_emergency_service)
+        self.emergency_srv = self.create_service(Trigger, "emergency_stop", self.handle_emergency_service)
 
         action_topic = f"{controller_name}/follow_joint_trajectory"
         self._action_client = ActionClient(self, FollowJointTrajectory, action_topic)

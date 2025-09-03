@@ -206,9 +206,12 @@ def launch_setup(context, *args, **kwargs):
     robot_description = {
         "robot_description": ParameterValue(value=robot_description_content, value_type=str)
     }
+    frame_prefix = {
+        "frame_prefix": "arm/"
+    }
 
     initial_joint_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+        [FindPackageShare("ur_arm_control"), "config", controllers_file]
     )
 
     rviz_config_file = PathJoinSubstitution(
@@ -309,7 +312,9 @@ def launch_setup(context, *args, **kwargs):
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[robot_description,
+                    frame_prefix
+                    ],
     )
 
     rviz_node = Node(
@@ -329,7 +334,7 @@ def launch_setup(context, *args, **kwargs):
             executable="spawner",
             arguments=[
                 "--controller-manager",
-                "/controller_manager",
+                "controller_manager",
                 "--controller-manager-timeout",
                 controller_spawner_timeout,
             ]
