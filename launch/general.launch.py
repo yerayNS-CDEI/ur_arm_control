@@ -2,7 +2,7 @@ from launch import LaunchDescription
 from launch.actions import GroupAction, IncludeLaunchDescription, DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import PushRosNamespace, Node
+from launch_ros.actions import PushRosNamespace, Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -46,9 +46,19 @@ def generate_launch_description():
         description='UR type for the arm robot',
     )
 
+    # ----- Sim time param (configurable desde CLI) -----
+    arm_use_sim_time_arg = DeclareLaunchArgument(
+        'arm_use_sim_time',
+        default_value=TextSubstitution(text='false'),
+        description='Use /clock (sim time) for /arm namespace',
+    )
+    arm_use_sim_time = LaunchConfiguration('arm_use_sim_time')
+    
+
     # --- Namespaced groups (namespace ONLY in the parent) ---
     arm_group = GroupAction([
         PushRosNamespace('arm'),
+        SetParameter(name='use_sim_time', value=arm_use_sim_time),
         # Include the UR control stack for the arm
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(ur_control_launch),
@@ -76,6 +86,7 @@ def generate_launch_description():
             executable="planner_node",
             name="robotic_arm_planner_node",
             output="screen",
+            parameters=[{'use_sim_time': arm_use_sim_time}],
         ),
 
         Node(
@@ -83,6 +94,7 @@ def generate_launch_description():
             executable="end_effector_pose_node",
             name="end_effector_pose_node",
             output="screen",
+            parameters=[{'use_sim_time': arm_use_sim_time}],
         ),
         
     ])
@@ -93,5 +105,6 @@ def generate_launch_description():
         tf_prefix_arg,
         launch_rviz_arg,
         arm_type_arg,
+        arm_use_sim_time_arg,
         arm_group,
     ])

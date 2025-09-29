@@ -186,15 +186,16 @@ class PublisherJointTrajectory(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    publisher_joint_trajectory = PublisherJointTrajectory()
-
     try:
+        publisher_joint_trajectory = PublisherJointTrajectory()
         rclpy.spin(publisher_joint_trajectory)
     except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         print("Keyboard interrupt received. Shutting down node.")
     except Exception as e:
         print(f"Unhandled exception: {e}")
-
+    finally:
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
