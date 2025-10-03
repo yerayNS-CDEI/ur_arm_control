@@ -8,7 +8,7 @@ def generate_launch_description():
     urdf_path = os.path.join(
         get_package_share_directory('ur_arm_control'),
         'urdf',
-        'ur10e.urdf'
+        'BIM_model.urdf'
     )
     return LaunchDescription([
         Node(
