@@ -9,6 +9,7 @@ def generate_launch_description():
         get_package_share_directory('ur_arm_control'),
         'urdf',
         'BIM_model.urdf'
+        # 'ur10e.urdf'
     )
     return LaunchDescription([
         Node(
@@ -18,13 +19,13 @@ def generate_launch_description():
             output='screen',
             arguments=[urdf_path]
         ),
-        Node(
-            package='robot_state_publisher',
-            executable='robot_state_publisher',
-            name='robot_state_publisher',
-            parameters=[{'robot_description': open(urdf_path).read()}],
-            output='screen'
-        ),
+        # Node(
+        #     package='robot_state_publisher',
+        #     executable='robot_state_publisher',
+        #     name='robot_state_publisher',
+        #     parameters=[{'robot_description': open(urdf_path).read()}],
+        #     output='screen'
+        # ),
         Node(
             package='rviz2',
             executable='rviz2',

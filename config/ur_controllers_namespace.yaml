@@ -1,3 +1,6 @@
+# Observe that to enable the namespace usage, 
+# the symbol /** has been added to all controllers
+
 /**/controller_manager:
   ros__parameters:
     joint_state_broadcaster:

@@ -312,7 +312,7 @@
     <collision>
       <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/collision/base.stl"/>
+        <mesh filename="package://ur_description/meshes/ur10e/collision/base.stl" scale="1.2 1.2 1.2"/>
       </geometry>
     </collision>
     <inertial>
@@ -331,7 +331,7 @@
     <collision>
       <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/collision/shoulder.stl"/>
+        <mesh filename="package://ur_description/meshes/ur10e/collision/shoulder.stl" scale="1.2 1.2 1.2"/>
       </geometry>
     </collision>
     <inertial>
@@ -350,7 +350,7 @@
     <collision>
       <origin rpy="1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.1762"/>
       <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/collision/upperarm.stl"/>
+        <mesh filename="package://ur_description/meshes/ur10e/collision/upperarm.stl" scale="1.2 1.2 1.2"/>
       </geometry>
     </collision>
     <inertial>
@@ -369,7 +369,7 @@
     <collision>
       <origin rpy="1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.0393"/>
       <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/collision/forearm.stl"/>
+        <mesh filename="package://ur_description/meshes/ur10e/collision/forearm.stl" scale="1.2 1.2 1.2"/>
       </geometry>
     </collision>
     <inertial>
@@ -388,7 +388,7 @@
     <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.135"/>
       <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/collision/wrist1.stl"/>
+        <mesh filename="package://ur_description/meshes/ur10e/collision/wrist1.stl" scale="1.2 1.2 1.2"/>
       </geometry>
     </collision>
     <inertial>
@@ -407,7 +407,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 -0.12"/>
       <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/collision/wrist2.stl"/>
+        <mesh filename="package://ur_description/meshes/ur10e/collision/wrist2.stl" scale="1.2 1.2 1.2"/>
       </geometry>
     </collision>
     <inertial>
@@ -426,7 +426,7 @@
     <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.1168"/>
       <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/collision/wrist3.stl"/>
+        <mesh filename="package://ur_description/meshes/ur10e/collision/wrist3.stl" scale="1.2 1.2 1.2"/>
       </geometry>
     </collision>
     <inertial>
