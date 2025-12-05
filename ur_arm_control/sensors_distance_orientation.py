@@ -12,7 +12,7 @@ from robotic_arm_planner.planner_lib.closed_form_algorithm import closed_form_al
 class SensorsOrientation(Node):
 
     def __init__(self):
-        super().__init__('sensors_distance_orientation')
+        super().__init__('sensors_orientation')
 
         # Node Variables
         self.end_effector_pose = None
@@ -53,9 +53,9 @@ class SensorsOrientation(Node):
             # self.dA = s2*100
             # self.dB = s3*100
             # self.dC = s1*100
-            self.dA = ultra3*100
-            self.dB = ultra1*100
-            self.dC = ultra2*100
+            self.dA = ultra3*100    
+            self.dB = ultra2*100
+            self.dC = ultra1*100
 
             self.get_logger().info(
                 f"Ultrasound: [{ultra1:.2f}, {ultra2:.2f}, {ultra3:.2f}] m | "
@@ -88,12 +88,12 @@ class SensorsOrientation(Node):
             self.get_logger().info(f"Distance to wall from center: {distance:.2f} cm")
 
             # Pitch and yaw error angles 
-            yaw = -np.arctan2(nw[1],nw[2])
-            pitch = np.arctan2(nw[0],nw[2])
-            yaw_deg = np.rad2deg(yaw)
-            pitch_deg = np.rad2deg(pitch)
-            self.get_logger().info(f"Pitch: {pitch_deg:.2f} degrees")
-            self.get_logger().info(f"Yaw: {yaw_deg:.2f} degrees")
+            gamma = -np.arctan2(nw[1],nw[2])
+            beta = -np.arctan2(nw[0],nw[2])
+            gamma_deg = np.rad2deg(gamma)
+            beta_deg = np.rad2deg(beta)
+            self.get_logger().info(f"Pitch_ee: {beta_deg:.2f} degrees")
+            self.get_logger().info(f"Roll_ee: {gamma_deg:.2f} degrees")
 
             # Current rotation of the EE w.r.t. base frame
             rot = self.end_effector_pose.orientation
@@ -102,7 +102,7 @@ class SensorsOrientation(Node):
             self.get_logger().info(f"Current Orientation (rpy w.r.t. base frame): Roll={curr_orn[0]:.2f}, Pitch={curr_orn[1]:.2f}, Yaw={curr_orn[2]:.2f}")
 
             # Incremental rotation in EE frame Rotación (order ZYX = Intrinsic roll-pitch-yaw)
-            increment_rot_ee = R.from_euler('ZYX', [0, pitch, yaw], degrees=False)
+            increment_rot_ee = R.from_euler('ZYX', [0, beta, gamma], degrees=False)
 
             # Rotation Composition: R_goal = R_base * R_increment(EE_frame)
             goal_rot = curr_orn_rot * increment_rot_ee
@@ -177,7 +177,7 @@ class SensorsOrientation(Node):
             time_from_start = 0.5
             goal_pose = JointTrajectoryPoint()
             goal_pose.positions = joint_values.tolist()
-            # goal_pose.positions[5] += -0.7854       # commented for simulation, uncommented for real robot
+            # goal_pose.positions[5] += (0.7854+1.5708)
             goal_pose.time_from_start.sec = int(time_from_start)
             goal_pose.time_from_start.nanosec = int((time_from_start % 1.0) * 1e9)
             traj_msg.points.append(goal_pose)
